@@ -11,27 +11,16 @@
     <TextView
         android:id="@+id/test_text"
         android:layout_margin="@dimen/activity_vertical_margin"
-        android:text="@string/hello_world"
+        android:text="@string/title_activity_main"
+        android:textAppearance="?android:attr/textAppearanceLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <include layout="@layout/restaurant"
-        android:id="@+id/suggestion_1"
+    <LinearLayout
+        android:id="@+id/restaurant_container"
         android:layout_below="@+id/test_text"
+        android:orientation="vertical"
         android:layout_height="wrap_content"
         android:layout_width="match_parent" />
-
-    <include layout="@layout/restaurant"
-        android:id="@+id/suggestion_2"
-        android:layout_below="@+id/suggestion_1"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent" />
-
-    <include layout="@layout/restaurant"
-        android:id="@+id/suggestion_3"
-        android:layout_below="@+id/suggestion_2"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent" />
-
 
 </RelativeLayout>

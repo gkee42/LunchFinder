@@ -8,11 +8,16 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.michael.lunchfinder.R;
 import com.example.michael.lunchfinder.loader.RestaurantLoader;
 import com.example.michael.lunchfinder.model.Restaurant;
+
+import java.text.NumberFormat;
+import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -23,18 +28,8 @@ import butterknife.InjectView;
  */
 public class MainActivityFragment extends Fragment {
 
-//    @InjectView(R.id.title_text)
-    TextView mRestaurantName;
-
-//    @InjectView(R.id.price_range)
-    TextView mRestaurantPriceRange;
-
-
-    TextView mRestaurantName2;
-    TextView mRestaurantPriceRange2;
-
-    TextView mRestaurantName3;
-    TextView mRestaurantPriceRange3;
+    @InjectView(R.id.restaurant_container)
+    LinearLayout mRestaurantContainer;
 
     public MainActivityFragment() {
     }
@@ -45,14 +40,7 @@ public class MainActivityFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_main, container, false);
 
-//        ButterKnife.inject(this, v);
-
-        mRestaurantName = (TextView) v.findViewById(R.id.suggestion_1).findViewById(R.id.title_text);
-        mRestaurantPriceRange = (TextView) v.findViewById(R.id.suggestion_1).findViewById(R.id.price_range);
-        mRestaurantName2 = (TextView) v.findViewById(R.id.suggestion_2).findViewById(R.id.title_text);
-        mRestaurantPriceRange2 = (TextView) v.findViewById(R.id.suggestion_2).findViewById(R.id.price_range);
-        mRestaurantName3 = (TextView) v.findViewById(R.id.suggestion_3).findViewById(R.id.title_text);
-        mRestaurantPriceRange3 = (TextView) v.findViewById(R.id.suggestion_3).findViewById(R.id.price_range);
+        ButterKnife.inject(this, v);
 
         return v;
     }
@@ -63,30 +51,43 @@ public class MainActivityFragment extends Fragment {
 
         final Activity activity = getActivity();
 
-        getLoaderManager().initLoader(R.id.loader_restaurant, null, new LoaderManager.LoaderCallbacks<Restaurant>() {
+        // Populate restaurant suggestions in background thread.
+        getLoaderManager().initLoader(R.id.loader_restaurant, null, new LoaderManager.LoaderCallbacks<List<Restaurant>>() {
             @Override
-            public Loader<Restaurant> onCreateLoader(int id, Bundle args) {
+            public Loader<List<Restaurant>> onCreateLoader(int id, Bundle args) {
+                // TODO show loading
                 return new RestaurantLoader(activity);
             }
 
             @Override
-            public void onLoadFinished(Loader<Restaurant> loader, Restaurant data) {
-                if(data != null) {
-                    mRestaurantName.setText(data.getName());
-                    // TODO better string
-                    mRestaurantPriceRange.setText(String.format("%.2f - %.2f", data.getMinPrice(), data.getMaxPrice()));
+            public void onLoadFinished(Loader<List<Restaurant>> loader, List<Restaurant> data) {
+                // TODO end loading indicator
+                if(data != null && data.size() > 0) {
+                    for(Restaurant r1: data) {
+                        // inflate restaurant views and add them dynamically
+                        View restaurantView = LayoutInflater.from(activity).inflate(R.layout.restaurant, mRestaurantContainer, false);
+                        TextView restaurantName = (TextView) restaurantView.findViewById(R.id.title_text);
+                        TextView restaurantPriceRange = (TextView) restaurantView.findViewById(R.id.price_range);
 
-                    // TODO load list of restaurants instead...
-                    mRestaurantName3.setText(data.getName());
-                    mRestaurantPriceRange3.setText(String.format("%.2f - %.2f", data.getMinPrice(), data.getMaxPrice()));
+                        restaurantName.setText(r1.getName());
+                        // TODO move to strings file
+                        NumberFormat currencyFormat = NumberFormat
+                                .getCurrencyInstance();
+
+                        restaurantPriceRange.setText(currencyFormat.format(r1.getMinPrice()) + " - " + currencyFormat.format(r1.getMaxPrice()));
+
+                        mRestaurantContainer.addView(restaurantView);
+                    }
+                } else if(data == null) {
+                    // TODO Embed error message text in screen. Refresh button?
+                    Toast.makeText(activity, R.string.error_load_failed, Toast.LENGTH_SHORT).show();
                 } else {
-                    // TODO string file
-                    mRestaurantName.setText("Unable to load restaurant");
+                    Toast.makeText(activity, R.string.error_no_restaurants_found, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onLoaderReset(Loader<Restaurant> loader) {
+            public void onLoaderReset(Loader<List<Restaurant>> loader) {
                 // nothing needed
             }
         });
